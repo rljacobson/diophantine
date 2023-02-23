@@ -1,0 +1,14 @@
+[package]
+name          = "diophantine"
+author        = "Robert Jacobson <rljacobson@gmail.com"
+description   = "The linear diophantine equation solver due to Steven Eker factored into its own library. The original solver can be found in the Maude source code."
+version       = "0.1.0"
+repository    = "https://www.github.com/rljacobson/diophantine"
+license       = "This software library is distributed under the terms of the GNU Lesser General Public License. https://www.gnu.org/licenses/lgpl-3.0.en.html"
+license-file  = "LICENSE.txt"
+
+publish = false
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
