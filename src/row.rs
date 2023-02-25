@@ -11,7 +11,7 @@ use crate::{Select, Soluble};
 ///	Structure for each row. We have a pair of member functions to handle
 ///	making a selection from a multiset, both normally and in the presence
 ///	of solubility constraints on the non-selected part.
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub(crate) struct Row {
     pub(crate) name             : u32,          // original position of row
     pub(crate) coeff            : u32,          // coefficient
@@ -35,7 +35,7 @@ impl Row {
     ///	exceeding overall selection size). Then make up the size of the selection
     ///	by selecting the earliest elements available.
     pub fn multiset_select(&mut self, bag: &mut Vec<u32>, find_first: bool) -> bool {
-        let mut undone: u32 = 0;
+        let mut undone: i32 = 0;
         let mut forwards: bool = false; // A flag directing control flow.
 
         if !find_first {
@@ -47,7 +47,7 @@ impl Row {
                     let t = self.selection[j].extra;
 
                     if undone > 0 && t < self.selection[j].max_extra {
-                        self.selection[j].max_extra += 1;
+                        self.selection[j].extra += 1;
                         undone -= 1;
                         bag[j] -= self.coeff;
                         // Go to forwards section.
@@ -57,7 +57,7 @@ impl Row {
 
                     if t > 0 {
                         self.selection[j].extra = 0;
-                        undone += t;
+                        undone += t as i32;
                         bag[j] += t * self.coeff;
                     }
                 }
@@ -67,7 +67,7 @@ impl Row {
                 return false;
             }
         } else {
-            undone = self.current_size;
+            undone = self.current_size as i32;
         }
 
         // Forwards //
@@ -75,16 +75,16 @@ impl Row {
         while undone > 0 {
             assert!(j < bag.len());
 
-            let t: u32 = min(undone, self.selection[j].max_extra);
+            let t: i32 = min(undone, self.selection[j].max_extra as i32);
             if t > 0 {
-                self.selection[j].extra = t;
+                self.selection[j].extra = t as u32;
                 undone -= t;
-                bag[j] -= t * self.coeff;
+                bag[j] -= t as u32 * self.coeff;
             }
 
             j += 1;
         }
-
+        
         return true;
     }
 
@@ -227,7 +227,9 @@ impl Row {
           if undone > 0 && t < self.selection[j].max_extra {
             let mut c = bag[j];
 
-            for e in 1..=undone {
+            let mut e = 1;
+            while e <= undone{
+            // for e in 1..=undone {
               assert!((t + e) <= (self.selection[j].max_extra));
               c -= self.coeff;
               if soluble[c as usize].min != Soluble::INSOLUBLE {
@@ -237,6 +239,7 @@ impl Row {
                 // Same as `goto FORWARD block`
                 continue 'forward;
               }
+              e += 1;
             }
           }
           if t > 0 {

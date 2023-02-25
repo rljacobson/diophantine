@@ -1,6 +1,69 @@
 /*!
 A solver for linear Diophantine systems associated with AC and ACU matching. The exposition below is from Maude.
 
+
+# Example
+
+The system of linear (algebraic) equations
+
+```
+2x + 3y +  z + 5w + 6u + 0v == 26,
+ x + 2y + 3z + 4w + 5u + 2v == 28,
+3x + 2y + 5z +  w + 7u + 3v == 32,
+2x +  y + 4z + 3w + 5u +  v == 25,
+5x + 3y + 2z + 4w + 8u + 5v == 41,
+ x + 4y + 2z +  w + 3u + 4v == 26
+```
+has solution x = 1, y = 2, z = 2, w = 2, u = 1, v = 2. So we have
+
+```
+ ┌─ ─┐T ┌─           ─┐   ┌────┐T
+ │ 1 │  │ 2 1 3 2 5 1 │   │ 26 │
+ │ 2 │  │ 3 2 2 1 3 4 │   │ 28 │
+ │ 2 │  │ 1 3 5 4 2 2 │   │ 32 │
+ │ 2 │  │ 5 4 1 3 4 1 │ = │ 25 │ ,
+ │ 1 │  │ 6 5 7 5 8 3 │   │ 41 │
+ │ 2 │  │ 0 2 3 1 5 4 │   │ 26 │
+ └─ ─┘  └─           ─┘   └────┘
+
+   R   *       M        =   C
+```
+
+We solve an alternative problem in which R and C are given and M is solved for. We constrain the matrix M by giving values min_j and max_j such that the sum of values in row j has minimum value min_j and maximum value max_j.
+
+In general, there may be multiple solutions. To generate solutions, call `System.solve()` until it returns false. When it returns true, the solution is extracted with `System.solution(row, column)`.
+
+
+```rust
+
+let mut system = DiophantineSystem::new(6, 6);
+system.insert_row(1, 10, 20); // 14 = actual sum of row
+system.insert_row(2, 11, 19); // 15 = actual sum of row
+system.insert_row(2, 15, 20); // 17 = actual sum of row
+system.insert_row(2, 15, 20); // 18 = actual sum of row
+system.insert_row(1, 30, 38); // 34 = actual sum of row
+system.insert_row(2, 12, 16); // 15 = actual sum of row
+system.insert_column(26);
+system.insert_column(28);
+system.insert_column(32);
+system.insert_column(25);
+system.insert_column(41);
+system.insert_column(26);
+
+while system.solve() {
+  println!("\nSolution:");
+  for row in 0..6 {
+    for col in 0..6 {
+      print!("{}  ", system.solution(row, col));
+    }
+    println!();
+  }
+}
+
+```
+
+# Description from Maude
+
 Based on:
 
 > Steven Eker,
@@ -65,7 +128,7 @@ pub use system::DiophantineSystem;
 // TODO: Templatize integer types.
 
 
-#[derive(Copy, Clone, Default)]
+#[derive(Copy, Clone, Default, Debug)]
 pub(crate) struct Select {
   pub(crate) base      : u32,	// base value for element of $M$ (0 for simple systems)
   pub(crate) extra     : u32,	// extra value representing current state of solution
@@ -79,7 +142,7 @@ pub(crate) struct Select {
 ///	$R_j$ for $j > i$, respecting the maximum allowable sums but not the minimum
 ///	allowable sums (since some other column may make up the minimum).
 ///	If no such (natural number) $K$ exists we store `min = max = INSOLUBLE`.
-#[derive(Copy, Clone, Default)]
+#[derive(Copy, Clone, Default, Debug)]
 pub(crate) struct Soluble {
   pub(crate) min: i32,	// minimum assignment to row for given column value
   pub(crate) max: i32,	// maximum assignment to row for given column value
@@ -100,10 +163,10 @@ impl Soluble {
 #[inline(always)]
 pub(crate) fn ceiling_division(dividend: i32, divisor: i32) -> i32 {
     if divisor > 0 {
-      if dividend > 0 {
-          -(dividend / (-divisor))
+      if dividend >= 0 {
+          (dividend + divisor - 1) / divisor
       } else {
-          ((-dividend) + (-divisor) - 1) / (-divisor)
+          -((-dividend)  / divisor)
       }
     }
     else {
@@ -119,7 +182,7 @@ pub(crate) fn ceiling_division(dividend: i32, divisor: i32) -> i32 {
 #[inline(always)]
 pub(crate) fn floor_division(dividend: i32, divisor: i32) -> i32 {
     if divisor > 0 {
-      if dividend > 0 {
+      if dividend >= 0 {
           dividend / divisor
       } else {
           -((divisor - dividend - 1) / divisor)
@@ -147,12 +210,12 @@ mod tests {
     fn system_solver_test() {
 
       let mut system = DiophantineSystem::new(6, 6);
-      system.insert_row(1, 10, 20); // 14 = actual sum of row
-      system.insert_row(2, 11, 19); // 15 = actual sum of row
-      system.insert_row(2, 15, 20); // 17 = actual sum of row
-      system.insert_row(2, 15, 20); // 18 = actual sum of row
-      system.insert_row(1, 30, 38); // 34 = actual sum of row
-      system.insert_row(2, 12, 16); // 15 = actual sum of row
+      system.insert_row(1, 14, 14);  // 14 = actual sum of row
+      system.insert_row(2, 15, 15);  // 15 = actual sum of row
+      system.insert_row(2, 17, 17);  // 17 = actual sum of row
+      system.insert_row(2, 18, 18);  // 18 = actual sum of row
+      system.insert_row(1, 34, 34);  // 34 = actual sum of row
+      system.insert_row(2, 15, 15);  // 15 = actual sum of row
       system.insert_column(26);
       system.insert_column(28);
       system.insert_column(32);
@@ -160,7 +223,11 @@ mod tests {
       system.insert_column(41);
       system.insert_column(26);
 
-      while system.solve() {
+      // println!("Solve: {}", system.solve());
+
+      for _ in 0..8{
+      // while system.solve() {
+        system.solve();
         println!("\nSolution:");
         for row in 0..6 {
           for col in 0..6 {
@@ -169,5 +236,8 @@ mod tests {
           println!();
         }
       }
+
+      print!("Done!")
+
     }
 }

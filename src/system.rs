@@ -106,7 +106,7 @@ impl DiophantineSystem {
     let s = &self.rows[self.row_permute[r] as usize].selection[c as usize];
     return s.base + s.extra;
   }
-
+  
   #[inline(always)]
   pub fn row_count(&self) -> usize {
     self.rows.len()
@@ -185,6 +185,8 @@ impl DiophantineSystem {
         || sum_of_max_products < self.column_sum
     {
       self.failed = true;
+      // println!("Precompute failed #1");
+      // self.dump_info();
       return false;
     }
 
@@ -198,7 +200,9 @@ impl DiophantineSystem {
       row.min_leave = min_total as i32;
       row.max_leave = max_total as i32;
       row.selection.resize(self.columns.len(), Select::default());
-
+      for s in row.selection.iter_mut(){
+        s.base = 0;
+      }
       min_total += row.min_product;
       max_total += row.max_product;
     }
@@ -213,6 +217,8 @@ impl DiophantineSystem {
       for column in self.columns.iter() {
         if soluble[*column as usize].min < 0 {
           self.failed = true;
+          // println!("Precompute failed #2");
+          // self.dump_info();
           return false;
         }
       }
@@ -220,7 +226,26 @@ impl DiophantineSystem {
       self.complex = true;
     }
 
+    // self.dump_info();
     true
+  }
+
+
+  fn dump_info(&self){
+    println!(
+      "row permute: {:?}\nclosed: {}\n column_sum: {}\ncomplex: {}\nfailed: {}\nmax_column_value: {}",
+      self.row_permute,
+      self.closed,
+      self.column_sum,
+      self.complex,
+      self.failed,
+      self.max_column_value
+    );
+    println!("Rows:");
+    for row in &self.rows {
+      println!("{:?}", row);
+    }
+    println!("columns: {:?}", self.columns);
   }
 
 
@@ -408,7 +433,7 @@ impl DiophantineSystem {
 
         column_total += t;
 
-        if t > coeff {
+        if t >= coeff {
           t /= coeff;
           max_sum += t;
           r.selection[i].max_extra = t;
@@ -421,7 +446,7 @@ impl DiophantineSystem {
       let min_size: u32 = max(
         r.min_size,
         ceiling_division(
-          (column_total as i32 - r.max_leave) as i32,
+          column_total as i32 - r.max_leave,
           coeff as i32
         ) as u32
       );
@@ -431,7 +456,7 @@ impl DiophantineSystem {
           r.max_size
         ),
         floor_division(
-          (column_total as i32 - r.min_leave) as i32,
+          column_total as i32 - r.min_leave,
           coeff as i32
         ) as u32
       );
@@ -464,7 +489,7 @@ impl DiophantineSystem {
   /// Solves the simple case using the auxiliary functions `solve_row_simple(..)` and `solve_last_row_simple(..)`.
   fn solve_simple(&mut self, mut find_first: bool) -> bool {
     if self.rows.len() > 1 {
-      let penultimate_idx = self.rows.len() - 1;
+      let penultimate_idx = self.rows.len() - 2;
       let mut i = if find_first { 0 } else { penultimate_idx };
 
       loop {
