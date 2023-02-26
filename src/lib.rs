@@ -29,7 +29,7 @@ has solution x = 1, y = 2, z = 2, w = 2, u = 1, v = 2. So we have
    R   *       M        =   C
 ```
 
-We solve an alternative problem in which R and C are given and M is solved for. We constrain the matrix M by giving values min_j and max_j such that the sum of values in row j has minimum value min_j and maximum value max_j.
+We solve an alternative problem in which R and C are given and M is solved for. We constrain the matrix M by giving values `min_j` and `max_j` such that the sum of values in row `j` has minimum value `min_j` and maximum value `max_j`.
 
 In general, there may be multiple solutions. To generate solutions, call `System.solve()` until it returns false. When it returns true, the solution is extracted with `System.solution(row, column)`.
 
@@ -37,12 +37,12 @@ In general, there may be multiple solutions. To generate solutions, call `System
 ```rust
 
 let mut system = DiophantineSystem::new(6, 6);
-system.insert_row(1, 10, 20); // 14 = actual sum of row
-system.insert_row(2, 11, 19); // 15 = actual sum of row
-system.insert_row(2, 15, 20); // 17 = actual sum of row
-system.insert_row(2, 15, 20); // 18 = actual sum of row
-system.insert_row(1, 30, 38); // 34 = actual sum of row
-system.insert_row(2, 12, 16); // 15 = actual sum of row
+system.insert_row(1, 10, 20);
+system.insert_row(2, 11, 19);
+system.insert_row(2, 15, 20);
+system.insert_row(2, 15, 20);
+system.insert_row(1, 30, 38);
+system.insert_row(2, 12, 16);
 system.insert_column(26);
 system.insert_column(28);
 system.insert_column(32);
@@ -208,12 +208,12 @@ mod tests {
     fn system_solver_test() {
 
       let mut system = DiophantineSystem::new(6, 6);
-      system.insert_row(1, 14, 14);  // 14 = actual sum of row
-      system.insert_row(2, 15, 15);  // 15 = actual sum of row
-      system.insert_row(2, 17, 17);  // 17 = actual sum of row
-      system.insert_row(2, 18, 18);  // 18 = actual sum of row
-      system.insert_row(1, 34, 34);  // 34 = actual sum of row
-      system.insert_row(2, 15, 15);  // 15 = actual sum of row
+      system.insert_row(1, 14, 14);
+      system.insert_row(2, 15, 15);
+      system.insert_row(2, 17, 17);
+      system.insert_row(2, 18, 18);
+      system.insert_row(1, 34, 34);
+      system.insert_row(2, 15, 15);
       system.insert_column(26);
       system.insert_column(28);
       system.insert_column(32);
