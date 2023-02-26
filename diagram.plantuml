@@ -1,0 +1,21 @@
+@startuml multisetComplex
+' scale 600 width
+
+[*] -> findFirst
+findFirst --> currentSize : False
+findFirst --> OuterElse : True
+currentSize -> InnerIf : "> 0"
+currentSize -> ReturnFalse : "<= 0"
+InnerIf --> Backtrack
+state "undone = 0" as InnerIf
+state "undone = currentSize" as OuterElse
+OuterElse --> Forwards
+Forwards --> Backtrack : "soluble[bag[j]].min == INSOLUBLE"
+Forwards --> ReturnTrue
+Backtrack --> Forwards : "soluble[c].min != INSOLUBLE"
+Backtrack --> ReturnFalse
+
+ReturnFalse --> [*]
+ReturnTrue --> [*]
+
+@enduml

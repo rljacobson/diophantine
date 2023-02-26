@@ -200,8 +200,6 @@ pub(crate) fn floor_division(dividend: i32, divisor: i32) -> i32 {
 
 
 
-
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -224,8 +222,9 @@ mod tests {
       system.insert_column(26);
 
       // println!("Solve: {}", system.solve());
-
-      for _ in 0..8{
+      let solution_count = 8;
+      for _ in 0..solution_count{
+      // let mut counter = 0usize;
       // while system.solve() {
         system.solve();
         println!("\nSolution:");
@@ -235,9 +234,17 @@ mod tests {
           }
           println!();
         }
+        // system.dump_info();
+
+
+        // This program can computer ~1 million solutions per second on an M1 Max Macbook Pro.
+        // counter +=1;
+        // if counter % 1_000_000 == 0 {
+        //   println!("{}", counter);
+        // }
       }
 
-      print!("Done!")
+      println!("Done!")
 
     }
 }

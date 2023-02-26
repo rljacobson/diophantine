@@ -106,7 +106,7 @@ impl DiophantineSystem {
     let s = &self.rows[self.row_permute[r] as usize].selection[c as usize];
     return s.base + s.extra;
   }
-  
+
   #[inline(always)]
   pub fn row_count(&self) -> usize {
     self.rows.len()
@@ -150,6 +150,8 @@ impl DiophantineSystem {
   // For complex system we also build solubility vectors and check each compontent
   // of C for trivial failure.
   fn precompute(&mut self) -> bool {
+    #[cfg(feature = "TRACE_CALLS")]
+    println!("precompute");
     assert!(self.rows.len() > 0);
     assert!(self.columns.len() > 0);
 
@@ -231,7 +233,7 @@ impl DiophantineSystem {
   }
 
 
-  fn dump_info(&self){
+  pub fn dump_info(&self){
     println!(
       "row permute: {:?}\nclosed: {}\n column_sum: {}\ncomplex: {}\nfailed: {}\nmax_column_value: {}",
       self.row_permute,
@@ -243,7 +245,7 @@ impl DiophantineSystem {
     );
     println!("Rows:");
     for row in &self.rows {
-      println!("{:?}", row);
+      println!("{}", row);
     }
     println!("columns: {:?}", self.columns);
   }
@@ -254,25 +256,30 @@ impl DiophantineSystem {
   fn build_solubility_vectors(&mut self) {
     // Compute solubility vector for last row
     {
+      #[cfg(feature = "TRACE_CALLS")]
+      println!("build_solubility_vectors");
       let r         : &mut Row          = self.rows.last_mut().unwrap();
       let s         : &mut Vec<Soluble> = &mut r.soluble;
       let coeff     : u32               = r.coeff;
       let mut count : u32               = 0;
 
       s.resize(self.max_column_value as usize + 1, Soluble::INSOLUBLE_STRUCT);
+      for v in &mut s[1..] {
+        *v = Soluble::INSOLUBLE_STRUCT;
+      }
 
-      for j in (0..=self.max_column_value).step_by(coeff as usize) {
+      let mut j = 0;
+      while j <= self.max_column_value && count <= r.max_size {
         s[j as usize].min = count as i32;
         s[j as usize].max = count as i32;
         count += 1;
-        if count > r.max_size {
-          break;
-        }
+        j += coeff;
       }
     }
 
     // Compute remaining vectors in descending order
     for i in (0..=(self.rows.len() - 2)).rev() {
+
       let max_size  : u32 = self.rows[i].max_size;
       let coeff     : u32 = self.rows[i].coeff;
 
@@ -417,7 +424,8 @@ impl DiophantineSystem {
   // feasable range of selection sizes.
   #[inline]
   fn solve_row_simple(&mut self, row_idx: usize, find_first: bool) -> bool {
-
+    #[cfg(feature = "TRACE_CALLS")]
+    println!("sovle_row_simple");
     if find_first {
       if ! self.viable(row_idx) {
         return false;
@@ -488,6 +496,8 @@ impl DiophantineSystem {
 
   /// Solves the simple case using the auxiliary functions `solve_row_simple(..)` and `solve_last_row_simple(..)`.
   fn solve_simple(&mut self, mut find_first: bool) -> bool {
+    #[cfg(feature = "TRACE_CALLS")]
+    println!("solve_simple");
     if self.rows.len() > 1 {
       let penultimate_idx = self.rows.len() - 2;
       let mut i = if find_first { 0 } else { penultimate_idx };
@@ -540,6 +550,8 @@ impl DiophantineSystem {
 
 
   fn solve_row_complex(&mut self, row_idx: usize, find_first: bool) -> bool {
+    #[cfg(feature = "TRACE_CALLS")]
+    println!("solve_row_complex");
     if find_first {
       if !self.viable(row_idx) {
         return false;
@@ -632,6 +644,8 @@ impl DiophantineSystem {
 
 
   fn solve_complex(&mut self, mut find_first: bool) -> bool {
+    #[cfg(feature = "TRACE_CALLS")]
+    println!("solve_complex");
     if self.rows.len() > 1 {
       let penultimate = self.rows.len() - 2;
       let mut i = if find_first { 0 } else { penultimate };
